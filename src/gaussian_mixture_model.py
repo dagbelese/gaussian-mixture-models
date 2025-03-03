@@ -37,7 +37,7 @@ class GMM:
         log_det = np.sum(np.log(var))
         quad = np.sum(diff * diff / var, axis=1)
 
-        prob = 0.5 * (self.D * np.log(2 * np.pi) + log_det + quad)
+        prob = -0.5 * (self.D * np.log(2 * np.pi) + log_det + quad)
 
         return prob
     
@@ -56,8 +56,7 @@ class GMM:
 
         for k in range(self.K):
             log_probs[k] = self._log_multivariate_normal_pdf(X, self.means[k], self.variances[k])
-
-        log_probs = log_probs + np.log(self.weights[k].reshape(-1, 1))
+            log_probs[k] += np.log(self.weights[k])
 
         log_likelihood = scipy.special.logsumexp(log_probs, axis=0)
 
@@ -167,9 +166,34 @@ class GMM:
         # Generate samples from each selected component
         samples = np.zeros((n_samples, self.D))
         for i, k in enumerate(component_indices):
-            samples[i] = self.means[k] + np.sqrt(self.variances[k] * np.random.randn(self.D))
+            samples[i] = self.means[k] + np.sqrt(self.variances[k]) * np.random.randn(self.D)
 
         return samples
+    
+    def predict(self, X):
+        """
+        Predict the most likely component for each data point
+        
+        Args:
+            X (np.ndarray): Input data of shape (N, D)
+            
+        Returns:
+            labels (np.ndarray): Component assignments of shape (N,)
+        """
+        responsibilities = self._e_step(X)
+        return np.argmax(responsibilities, axis=1)
+    
+    def predict_proba(self, X):
+        """
+        Predict the probability of each component for each data point.
+        
+        Args:
+            X (np.ndarray): Input data of shape (N, D)
+            
+        Returns:
+            probs (np.ndarray): Probability of each component for each data point, shape (N, K)
+        """
+        return self._e_step(X)
 
         
 
