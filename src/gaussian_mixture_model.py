@@ -76,7 +76,7 @@ class GMM:
         """
         N = X.shape[0]
         prev_ll = -np.inf
-        nll_history = []
+        self.nll_history = []
 
         for iter in range(max_iters):
             # E-step: Calculate responsibilities
@@ -87,14 +87,14 @@ class GMM:
 
             # Check convergence
             curr_ll = self.log_likelihood(X)
-            nll_history.append(-curr_ll)
+            self.nll_history.append(curr_ll)
             if np.abs(curr_ll - prev_ll) < tol:
                 print(f'Converged after {iter+1} iterations')
                 break
 
             prev_ll = curr_ll
 
-        return nll_history
+        return self.nll_history
     
     def _e_step(self, X):
         """
